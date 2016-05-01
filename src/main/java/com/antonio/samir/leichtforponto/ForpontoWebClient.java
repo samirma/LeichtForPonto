@@ -11,6 +11,7 @@ import com.antonio.samir.leichtforponto.webclient.exceptions.NotifyAlertExceptio
 import com.antonio.samir.leichtforponto.webclient.exceptions.StopIterationExcepition;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -37,14 +38,14 @@ public class ForpontoWebClient implements FormForponto {
 
     @Autowired
     DataEntryParser dataEntryParser;
+    private String endDate;
+    private String startDate;
 
     @PostConstruct
     public void init() {
 
         loginActions = new ArrayList<>();
-
-        loadLoginActionsData(loginData);
-
+        
     }
 
     private void executeActions(List<WebAction> actions) {
@@ -90,13 +91,8 @@ public class ForpontoWebClient implements FormForponto {
         loginActions.add(new InputText("deEdtUsuCodigoAD", recoverData.getLogin()));
         loginActions.add(new InputText("deEdtUsaSenhaAD", recoverData.getPassword()));
 
-        final Calendar today = Calendar.getInstance();
-        final String todaySring = DateUtil.getDayString(today);
-        today.add(Calendar.MONTH, -1);
-        final String monthAgoString = DateUtil.getDayString(today);
-
-        loginActions.add(new InputText("deEdtDataDe", monthAgoString));
-        loginActions.add(new InputText("deEdtDataAte", todaySring));
+        loginActions.add(new InputText("deEdtDataDe", startDate));
+        loginActions.add(new InputText("deEdtDataAte", endDate));
 
         loginActions.add(new ClickAction("/html/body/table/tbody/tr/td[2]/table/tbody/tr[2]/td/table[2]/tbody/tr/td/form/table/tbody/tr/td/table/tbody/tr[2]/td/input"));
 
@@ -132,6 +128,19 @@ public class ForpontoWebClient implements FormForponto {
         browser.close();
 
         return times;
+    }
+
+    @Override
+    public List<TimeTrack> getWorksHours(final Calendar startDateCal, final Calendar endDateCal) {
+
+        startDate = DateUtil.getDayString(startDateCal);
+        endDate = DateUtil.getDayString(endDateCal);
+        
+        loadLoginActionsData(loginData);
+        
+        login();
+        
+        return getDataEntries();
     }
 
 }
