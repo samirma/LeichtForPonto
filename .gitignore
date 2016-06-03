@@ -106,3 +106,4 @@ jira-rest-client.properties
 bug-description.pdf
 screen_capture.png
 jira-rest-client.log
+/nbproject/

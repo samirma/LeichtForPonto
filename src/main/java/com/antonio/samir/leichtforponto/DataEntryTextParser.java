@@ -1,12 +1,16 @@
 package com.antonio.samir.leichtforponto;
 
 import com.antonio.samir.leichtforponto.model.TimeTrack;
+import com.antonio.samir.leichtforponto.util.DateUtil;
 import java.text.ParseException;
 import java.util.Date;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.springframework.stereotype.Service;
 
@@ -49,12 +53,12 @@ public class DataEntryTextParser implements DataEntryParser {
             dateString = matcher.group(1);
         }
 
-        final Date parseDate = DateUtils.parseDate(dateString, "dd/MM/yyyy");
+        final Date parseDate = DateUtil.parseDateFromPtString(dateString);
 
         return parseDate;
     }
 
-    private long getHoursWorked(String text) {
+    private long getHoursWorked(final String text) {
         String pattern = "([0-9]{2}:[0-9]{2})";
 
         // Create a Pattern object
@@ -68,33 +72,50 @@ public class DataEntryTextParser implements DataEntryParser {
         Date enterTime = null;
         Date leftTime = null;
 
+        final SortedSet<Date> sortedSet = new TreeSet<>();
+
         while (matcher.find()) {
             String hour = matcher.group(1);
 
-            try {
-                final Date parseDate = DateUtils.parseDate(hour, "HH:mm");
+            addHourString(hour, sortedSet);
 
-                if (enterTime == null) {
-                    enterTime = parseDate;
-                } else if (leftTime == null) {
-                    leftTime = parseDate;
+        }
 
-                    final long startToEnd = leftTime.getTime() - enterTime.getTime();
+        if (StringUtils.contains(text, "+")) {
+            addHourString("00:00", sortedSet);
+            addHourString("23:59", sortedSet);
+        }
 
-                    workedTime = workedTime + (startToEnd/1000);
+        for (Date parseDate : sortedSet) {
 
-                    enterTime = null;
-                    leftTime = null;
+            if (enterTime == null) {
+                enterTime = parseDate;
+            } else if (leftTime == null) {
+                leftTime = parseDate;
 
-                }
+                final long startToEnd = leftTime.getTime() - enterTime.getTime();
 
-            } catch (ParseException ex) {
-                LOGGER.log(Level.SEVERE, null, ex);
+                workedTime = workedTime + (startToEnd / 1000);
+
+                enterTime = null;
+                leftTime = null;
+
             }
 
         }
 
         return workedTime;
+    }
+
+    public void addHourString(String hour, final SortedSet<Date> sortedSet) {
+
+        try {
+            final Date parseDate = DateUtils.parseDate(hour, "HH:mm");
+            sortedSet.add(parseDate);
+        } catch (ParseException ex) {
+            LOGGER.log(Level.SEVERE, null, ex);
+        }
+
     }
 
 }
