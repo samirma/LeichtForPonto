@@ -24,10 +24,11 @@ public abstract class GenericWebClient implements FormForponto {
     @Autowired
     @Qualifier(value = "firefox")
     protected Browser browser;
-    @Autowired
+
     protected FormLogin loginData;
+    
     @Autowired
-    DataEntryParser dataEntryParser;
+    protected DataEntryParser dataEntryParser;
     protected String endDate;
     protected String startDate;
 

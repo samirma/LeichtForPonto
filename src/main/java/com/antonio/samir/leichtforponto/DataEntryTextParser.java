@@ -3,8 +3,8 @@ package com.antonio.samir.leichtforponto;
 import com.antonio.samir.leichtforponto.model.TimeTrack;
 import com.antonio.samir.leichtforponto.util.DateUtil;
 import java.text.ParseException;
+import java.util.Collection;
 import java.util.Date;
-import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -38,7 +38,8 @@ public class DataEntryTextParser implements DataEntryParser {
         return timeTrack;
     }
 
-    private Date getDate(String text) throws ParseException {
+    @Override
+    public Date getDate(String text) throws ParseException {
         String pattern = "([0-9]{2}\\/[0-9]{2}\\/[0-9]{4})";
 
         // Create a Pattern object
@@ -58,7 +59,8 @@ public class DataEntryTextParser implements DataEntryParser {
         return parseDate;
     }
 
-    private long getHoursWorked(final String text) {
+    @Override
+    public long getHoursWorked(final String text) {
         String pattern = "([0-9]{2}:[0-9]{2})";
 
         // Create a Pattern object
@@ -67,12 +69,7 @@ public class DataEntryTextParser implements DataEntryParser {
         // Now create matcher object.
         Matcher matcher = r.matcher(text);
 
-        long workedTime = 0;
-
-        Date enterTime = null;
-        Date leftTime = null;
-
-        final SortedSet<Date> sortedSet = new TreeSet<>();
+        final Collection<Date> sortedSet = new TreeSet<>();
 
         while (matcher.find()) {
             String hour = matcher.group(1);
@@ -86,6 +83,15 @@ public class DataEntryTextParser implements DataEntryParser {
             addHourString("23:59", sortedSet);
         }
 
+        long workedTime = getWorkedHoursFromDateCollection(sortedSet);
+
+        return workedTime;
+    }
+
+    public long getWorkedHoursFromDateCollection(final Collection<Date> sortedSet) {
+        Date enterTime = null;
+        Date leftTime = null;
+        long workedTime = 0;
         for (Date parseDate : sortedSet) {
 
             if (enterTime == null) {
@@ -103,11 +109,10 @@ public class DataEntryTextParser implements DataEntryParser {
             }
 
         }
-
         return workedTime;
     }
 
-    public void addHourString(String hour, final SortedSet<Date> sortedSet) {
+    public void addHourString(String hour, final Collection<Date> sortedSet) {
 
         try {
             final Date parseDate = DateUtils.parseDate(hour, "HH:mm");
